@@ -1,9 +1,22 @@
 import os
 import random
+import threading
+from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Obtenemos las credenciales guardadas de forma segura en la nube
+# Servidor web falso para que Render no marque error en el plan Gratis
+app_web = Flask(__name__)
+
+@app_web.route('/')
+def home():
+    return "Bot de Señales activo 24/7 en Render"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app_web.run(host="0.0.0.0", port=port)
+
+# --- BOT DE TELEGRAM ---
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 MI_ID = os.environ.get("MI_CHAT_ID")
 
@@ -44,6 +57,9 @@ def main():
     if not TOKEN:
         raise ValueError("Error: No se ha configurado el TELEGRAM_TOKEN")
 
+    # Iniciar servidor web en segundo plano
+    threading.Thread(target=run_web, daemon=True).start()
+
     print("Iniciando Bot de Señales...")
     app = Application.builder().token(TOKEN).build()
 
@@ -54,4 +70,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-  
